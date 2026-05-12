@@ -606,7 +606,8 @@ def main():
         targets = [TULSI_DIR / args.kaand]
     else:
         targets = [d for d in TULSI_DIR.iterdir()
-                   if d.is_dir() and d.name != "Testing"]
+                   if d.is_dir() and d.name != "Testing"
+                   and not d.name.startswith(".")]
 
     if not targets:
         print(f"No kaand folders found under {TULSI_DIR}")
