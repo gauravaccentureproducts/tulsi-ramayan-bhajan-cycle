@@ -1,0 +1,4 @@
+1. create Ayodhya Kaand based on "C:\Users\gaurav.l.srivastava\Documents\VS Code\Tulsi\Procedure_Manual.txt". 
+2. Run tests as per "C:\Users\gaurav.l.srivastava\Documents\VS Code\Tulsi\Testing". 
+3. Fix all issues.
+4. Repeat 2&3 until zero issues.
