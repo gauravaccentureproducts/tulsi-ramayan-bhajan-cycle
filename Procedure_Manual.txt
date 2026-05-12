@@ -173,11 +173,9 @@ LANGUAGE:
    - Avoid heavy Sanskrit padding (saved for climax dohas/chaupais).
 
 REFRAIN MECHANICS:
-   - [Chorus] sthayi at top of chapter.
-   - [Chorus] returns once in the middle (typically before Verse 4 or
-     Verse 5).
-   - For the FINAL CHAPTER of a kaand: an additional [Chorus] return
-     after Verse 7, before [Outro] (grand-finale rule).
+   - [Chorus] sthayi appears ONCE at top of chapter (3 lines).
+   - NO mid-chapter or end-chapter chorus repeat. Total Devanagari
+     content lines per chapter = 31 exactly (3 sthayi + 7 x 4 chaupais).
 
 ------------------------------------------------------------
 PHASE 3 - STRICT FACT VALIDATION
@@ -252,10 +250,8 @@ Convert polished lyrics into Suno-ready text:
    [Verse 1] ... [Verse 7]
    [Outro]             - after final verse
 
-3. ADD chorus return (re-paste the 3-line sthayi):
-   - Once in the middle (typically before [Verse 4] or [Verse 5])
-   - For the FINAL CHAPTER of the kaand: also after [Verse 7],
-     before [Outro], for grand-finale effect
+3. (Removed in v2.1.) No mid-chapter or end-chapter chorus repeat.
+   The 3-line sthayi appears exactly once, at the top of the chapter.
 
 4. ADD per-chapter intensity tags at key arc moments. Place on own
    lines BEFORE the relevant [Verse N] tag. See Section 3.5 for the
@@ -632,8 +628,6 @@ Per-chapter:
    [ ] No yuga errors, no cross-avatar conflation, no forced rhyme.
    [ ] Hindi/Awadhi blend (Devanagari only in verse body).
    [ ] No em-dashes outside dialogue separators; ASCII-safe punctuation.
-   [ ] Chorus return present once in mid-chapter.
-   [ ] Final-chapter of kaand has extra chorus before [Outro].
    [ ] Per-chapter intensity tags placed at arc moments.
    [ ] Style prompt < 1000 characters.
    [ ] Style prompt includes voice descriptor; NO artist names.

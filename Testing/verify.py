@@ -770,8 +770,8 @@ def run_chapter(path, kaand_dir):
                            BLOCKER, False, "cannot parse file")]
     return [
         tc_s_003(raw), tc_s_004(style), tc_s_005(lyrics),
-        tc_s_006(lyrics), tc_s_007(lyrics), tc_s_008(lyrics),
-        tc_s_009(lyrics), tc_s_010(path, kaand_dir, lyrics),
+        tc_s_006(lyrics), tc_s_007(lyrics),
+        tc_s_009(lyrics),
         tc_s_011(lyrics),
         tc_f_001(lyrics), tc_f_002(lyrics), tc_f_003(lyrics),
         tc_f_004(path, lyrics), tc_f_005(path, lyrics),

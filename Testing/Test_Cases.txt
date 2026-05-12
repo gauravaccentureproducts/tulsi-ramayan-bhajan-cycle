@@ -41,17 +41,13 @@ TC-S-007 [BLOCKER] Sthayi at top
   Scope     : per file
   Criterion : First [Chorus] block appears before any [Verse N] tag.
 
-TC-S-008 [MAJOR  ] Mid-chapter chorus return
-  Scope     : per file
-  Criterion : [Chorus] returns at least once mid-song (before V4 or V5).
+TC-S-008 [REMOVED v2.1] (No mid-chapter chorus repeat in 31-line spec.)
 
 TC-S-009 [BLOCKER] Verse count = 7
   Scope     : per file
   Criterion : Exactly 7 [Verse N] blocks numbered 1-7.
 
-TC-S-010 [MINOR  ] Final-chapter extra chorus
-  Scope     : per file (last chapter of each kaand)
-  Criterion : Additional [Chorus] block after [Verse 7] before [Outro].
+TC-S-010 [REMOVED v2.1] (No final-chapter extra chorus in 31-line spec.)
 
 TC-S-011 [BLOCKER] [Outro] tag present
   Scope     : per file
