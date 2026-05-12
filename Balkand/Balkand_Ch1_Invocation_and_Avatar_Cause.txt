@@ -1,101 +1,64 @@
 ========== STYLE (paste into Suno style box) ==========
 
-Hindi devotional bhajan in Raag Yaman, peaceful contemplative evening mood. Lead vocal: warm soulful male baritone, slightly nasal resonance, plaintive heart-tugging timbre, restrained vibrato, mid-to-low range, earnest sincere delivery, smooth legato, vintage Hindi film bhajan playback style, kathavachak storyteller tone. Slow vilambit alaap on chorus with contemplative gravitas. Verses move through prayerful invocation, cosmic mythic mood during avatar-katha (Narad-curse, Manu-Shatarupa boon, Pratapbhanu origin), gathering shadow for Ravana's tyranny, hope at Vishnu's pledge, gentle anticipation through Ayodhya and yajna-preparation. Instruments: tabla in dadra-kaharwa, harmonium pad on raag base, bansuri between lines, soft sitar arpeggios, conch shankh at divine moments, light tanpura drone. Production: warm acoustic, natural reverb, vintage devotional aesthetic, no electronics, evening temple atmosphere.
+Hindi devotional bhajan in Raag Yaman, peaceful contemplative evening mood. Lead vocal: warm soulful male baritone, slightly nasal resonance, plaintive heart-tugging timbre, restrained vibrato, mid-to-low range, earnest sincere delivery, smooth legato, vintage Hindi film bhajan playback style, kathavachak storyteller tone. Slow vilambit alaap on chorus with contemplative gravitas. Verses move through prayerful invocation, cosmic mythic mood during avatar-katha (Narad-moh, Manu-Shatarupa, Pratapbhanu origin), Treta-tyranny gathering shadow, Prithvi-Vishnu pledge, Ayodhya setup, Vashishtha-yajna decision. Instruments: tabla in dadra-kaharwa, harmonium pad on raag base, bansuri between lines, soft sitar arpeggios, conch shankh at divine moments, light tanpura drone. Production: warm acoustic, natural reverb, vintage devotional aesthetic, no electronics, evening temple atmosphere.
 
 
 ========== LYRICS (paste into Suno lyrics box) ==========
 
 [Vilambit alaap]
 [Chorus]
-राम कथा मंगलमयी, सुनो धर मन ध्यान।
-तुलसी रचित मानस का, गाऊँ बालकाण्ड-गान।
-श्री राम जय राम जय, बोलो जय श्री राम॥
+मंगल भवन अमंगल हारी।
+द्रवहु सुदसरथ अजिर बिहारी।
+सिय राम जय राम जय श्री राम॥
 
 [Verse 1]
-प्रथम नमन गणराज को, हर लें मन-विकार।
-कृपा करें, हो शुद्ध मन, सुख की आए बहार।
-वाणी माता दीजिए, सुर-संगीत-संचार।
-राम-कथा का गायन हो, बहे प्रेम-धार॥
-
-[Verse 2]
-शिव-शंकर पार्वती सहित, करूँ नम्र प्रणाम।
-मन में बसे जिनके सदा, सीता-लखन-राम।
-पवनपुत्र हनुमान को, सुमिरूँ आठों याम।
-राम-भक्ति का दान दें, सिद्ध हो प्रभु-काम॥
-
-[Verse 3]
-गुरु चरणों में शीश धर, करूँ विनती बारंबार।
-भक्ति-ज्ञान का दीप जले, मन में हो उजियार।
-तुलसीदास की लेखनी, अमृत की भरमार।
-मानस का बालकाण्ड है, भक्ति-रस-संचार॥
+प्रथम नमन गणपति-गुरु पाए।
+वाणी-शिव-हनुमत मन भाए॥
+तुलसी-मानस-कथा सुनाई।
+अमृत-धार-रस की वर्षाई॥
 
 [Mythic mood]
+[Verse 2]
+नारद को अभिमान बढ़ाई।
+विष्णु-शरण रूप-दर्शन पाई॥
+हरि-रूप के बदले कपि-मुख दीन्हा।
+वानर-संग सहायक बन कीन्हा॥
+
+[Verse 3]
+मनु-शतरूपा वन-तप कीन्हा।
+चाहें प्रभु निष्काम-ही दीन्हा॥
+विष्णु प्रकटे आशीष-समाना।
+दशरथ-कौसल्या पुत्र-स्थाना॥
+
 [Verse 4]
-नारद-मुनि अभिमान भरे, गए विष्णु के पास।
-हरि-रूप माँगा प्रभु से, मिला कपि-मुख खास।
-श्राप दिया मुनि ने प्रभु को — सहो विरह की प्यास।
-वानर बनें सहायक तुम्हारे — श्राप फला अति-त्रास॥
+प्रतापभानु धरम-निधि वीरा।
+छली-ऋषि से बना अति-पीरा॥
+शाप-वश राक्षस-कुल जायो।
+रावण-कुम्भकरण-विभीषण आयो॥
 
 [Chorus]
-राम कथा मंगलमयी, सुनो धर मन ध्यान।
-तुलसी रचित मानस का, गाऊँ बालकाण्ड-गान।
-श्री राम जय राम जय, बोलो जय श्री राम॥
-
-[Verse 5]
-मनु-शतरूपा युगल थे, राज त्यागि वन-धाम।
-तप कीन्हा अति घोर वहाँ, चाहें प्रभु निष्काम।
-विष्णु प्रकटे करुणा से, दे आशीष अभिराम।
-त्रेता में पुत्र बनूँ तेरा, होगे दशरथ-कौसल्या नाम॥
-
-[Verse 6]
-प्रतापभानु था राजा बड़ा, धर्मनिष्ठ अति वीर।
-छली ऋषि-छल से वो फँसा, भोज बना अति-पीर।
-ब्राह्मण-शाप से जन्म लिए, राक्षस-कुल के मीर।
-रावण-कुम्भकर्ण बने वे, संग विभीषण धीर॥
+मंगल भवन अमंगल हारी।
+द्रवहु सुदसरथ अजिर बिहारी।
+सिय राम जय राम जय श्री राम॥
 
 [Gathering shadow]
-[Verse 7]
-त्रेता में बढ़ने लगा, अधर्म-पाप-प्रसार।
-रावण ने ब्रह्मा-वर पाय, किया गर्व-अत्याचार।
-देव-दनुज ऋषि सब काँपते, मिटा धर्म-व्यवहार।
-यज्ञ-वेद-तप खंडित कर, फैले शोक-संहार॥
+[Verse 5]
+त्रेता में बढ़ अधरम छायो।
+धरती-गौ ब्रह्म-शरण आयो॥
+क्षीरसागर विष्णु प्रकटाई।
+दशरथ-गृह लूँ अवतार-बढ़ाई॥
 
-[Conch shankh]
-[Hope rising]
-[Verse 8]
-धरती गौ बन ब्रह्मा-शरण, करती करुण पुकार।
-क्षीरसागर पहुँचे सब, विष्णु प्रकटे साकार।
-रघुकुल में दशरथ-गृह, लूँगा चार अवतार।
-रावण-वध मेरा संकल्प — हर्षित देव-परिवार॥
-
-[Chorus]
-राम कथा मंगलमयी, सुनो धर मन ध्यान।
-तुलसी रचित मानस का, गाऊँ बालकाण्ड-गान।
-श्री राम जय राम जय, बोलो जय श्री राम॥
-
-[Verse 9]
-सरयू-तट अयोध्या नगरी, दशरथ-राज सुख-वास।
-तीन रानी कौसल्या, कैकयी, सुमित्रा खास।
-सुख-वैभव सब साथ था, हर्षित जन-जन पास।
-पर पुत्र-अभाव खटक रहा, मन में बढ़ी निरास॥
-
-[Verse 10]
-गुरु वशिष्ठ बोले धीरज, राजा हो शुभ-ध्यान।
-अंग-देश से शृंगी-मुनि, बुलाओ तप-निधान।
-पुत्रकामेष्टि यज्ञ करें, मिले संतान महान।
-दशरथ ने स्वीकार किया, मन में आशा-गान॥
+[Verse 6]
+सरयू-तट अयोध्या-धामा।
+दशरथ-राज तीन रानी-नामा॥
+पुत्र-अभाव हृदय-दुख-दाई।
+मुनि-वसिष्ठ यज्ञ-सम्मति आई॥
 
 [Anticipation, soft build]
-[Verse 11]
-दशरथ-मन उत्साह बढ़ा, हुई आस-तरंग।
-तीनों रानी हर्षित हृदय, गाएँ प्रभु-गुण-संग।
-ऋषि-स्वागत की तैयारी, बढ़ी विधि-विधि-रंग।
-मंगल-वेला आ रही, गूँजे शुभ-प्रसंग॥
-
-[Verse 12]
-यहीं समाप्त भूमिका, अब सुनिए जन्म-गान।
-कैसे प्रकटे श्री राम, करूँगा यह बखान।
-श्री राम जय राम जय, बोलिए जय भगवान।
-प्रथम भाग पूरण हुआ, मंगल-मय कल्याण॥
+[Verse 7]
+शृंगी-मुनि-यज्ञ रचाई।
+मंगल-वेला अयोध्या आई॥
+श्री राम जय जय हरि-नामा।
+प्रथम भाग पूरण सुख-धामा॥
 
 [Outro]

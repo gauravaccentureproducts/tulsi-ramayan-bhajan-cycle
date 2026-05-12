@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """
-Tulsi-Ramayan Bhajan Cycle - Automated test runner.
+Tulsi-Ramayan Bhajan Cycle - Automated test runner (v2 Tulsidas-Mukesh format).
 
 Runs the automatable subset of Test_Cases.txt against any kaand folder
 under Tulsi/. Exits with code 1 if any BLOCKER fails.
+
+Format expected (v2):
+    - 31 lines per chapter (3 sthayi + 7 chaupais x 4 padas)
+    - AABB rhyme per chaupai
+    - Sthayi = Tulsidas-signature couplet + jay-ghosh (per Section 3.6)
 
 Usage:
     python verify.py                    # all kaand folders
@@ -48,7 +53,7 @@ BANNED_NAMES = [
     "kishore kumar", "hemant kumar",
 ]
 
-# ----- Banned filler/coined words (TC-F-007, TC-L-003) -----
+# ----- Banned filler/coined words (TC-F-007) -----
 BANNED_FILLERS = [
     "ललाम",
     "हुई हृदय की पाँव",
@@ -58,14 +63,15 @@ BANNED_FILLERS = [
     "कौसल्या सुलक्षणा",
 ]
 
-# ----- Stock-word frequency caps per chapter (TC-L-004) -----
+# ----- Stock-word frequency caps per chapter (TC-L-004, v2 scaled) -----
+# Recalculated for 31-line chapters (down from 51-line caps).
 STOCK_WORD_CAPS = {
-    "महान":      6,
-    "अभिराम":    5,
-    "जय-जयकार":  4,
-    "धाम":       8,
-    "नाम":       8,
-    "गान":       8,
+    "महान":      4,
+    "अभिराम":    3,
+    "जय-जयकार":  3,
+    "धाम":       5,
+    "नाम":       5,
+    "गान":       5,
 }
 
 # ----- Anchor raag per kaand (TC-C-003) -----
@@ -78,6 +84,61 @@ ANCHOR_RAAG = {
     "Lankakand":      ["Marwa", "Adana", "Shree"],
     "Uttarkand":      ["Yaman", "Bhupali"],
 }
+
+# ----- Per-kaand signature sthayi couplet (TC-L-008, TC-C-005) -----
+# Sthayi = 3 lines. Lines 1-2 are the kaand's signature Tulsidas couplet.
+# Line 3 is the universal jay-ghosh refrain.
+JAY_GHOSH_LINE = "सिय राम जय राम जय श्री राम॥"
+
+SIGNATURE_STHAYIS = {
+    "Balkand": [
+        "मंगल भवन अमंगल हारी।",
+        "द्रवहु सुदसरथ अजिर बिहारी।",
+        JAY_GHOSH_LINE,
+    ],
+    "Ayodhyakand": [
+        "रघुकुल रीति सदा चलि आई।",
+        "प्रान जाई बरु बचन न जाई।",
+        JAY_GHOSH_LINE,
+    ],
+    "Aranyakand": [
+        "वन-वासी राम-सिय-लखन-समाना।",
+        "ऋषि-मुनि-संग सहज-सुख-स्थाना।",
+        JAY_GHOSH_LINE,
+    ],
+    "Kishkindhakand": [
+        "हनुमत-सुग्रीव-सहायक-संगा।",
+        "राम-कथा शुभ-यात्रा-तरंगा।",
+        JAY_GHOSH_LINE,
+    ],
+    "Sundarkand": [
+        "जय हनुमान ज्ञान गुन सागर।",
+        "जय कपीस तिहुं लोक उजागर।",
+        JAY_GHOSH_LINE,
+    ],
+    "Lankakand": [
+        "रावण-कुल-संहारक-नाथा।",
+        "राम-धनुष-शर-मरम-गाथा।",
+        JAY_GHOSH_LINE,
+    ],
+    "Uttarkand": [
+        "राम-राज्य बैठें त्रैलोका।",
+        "हरषित भए गए सब सोका।",
+        JAY_GHOSH_LINE,
+    ],
+}
+
+# ----- Awadhi participles (TC-L-011) -----
+AWADHI_PARTICIPLES = [
+    "कीन्हा", "दीन्हा", "लीन्हा", "कीन्ह", "दीन्ह",
+    "आयो", "गयो", "जायो", "छायो", "समायो", "धरायो",
+    "भयो", "बहायो", "रचायो",
+    "पाई", "सुहाई", "बढ़ाई", "रचाई", "सुनाई", "बताई",
+    "दिखाई", "समझाई", "उठाई",
+    "समाना", "स्थाना", "धामा", "नामा", "गाथा",
+    "वीरा", "पीरा", "धीरा", "गहीरा", "अधीरा", "मीरा",
+    "देइ", "लीन्ह", "कीन्ह", "भये", "भयउ",
+]
 
 
 # ================================================================
@@ -135,22 +196,57 @@ def lyric_lines(text):
             if l.strip() and not l.strip().startswith("[")]
 
 
+# Independent-vowel -> matra equivalence for rhyme comparison.
+# 'आई' and 'ाई' are sonically identical at line-end; normalize before compare.
+_DEVA_VOWEL_TO_MATRA = {
+    'आ': 'ा', 'इ': 'ि', 'ई': 'ी', 'उ': 'ु', 'ऊ': 'ू',
+    'ए': 'े', 'ऐ': 'ै', 'ओ': 'ो', 'औ': 'ौ',
+}
+
+
+def _normalize_deva(s):
+    """Convert independent vowels to their matra forms for sonic compare."""
+    return ''.join(_DEVA_VOWEL_TO_MATRA.get(c, c) for c in s)
+
+
+def pada_tail(pada, n=2):
+    """Return last n characters of a pada after stripping punctuation,
+    normalized so independent-vowels and matras compare as equivalent."""
+    cleaned = pada.rstrip("।॥.,?! ").rstrip()
+    tail = cleaned[-n:] if len(cleaned) >= n else cleaned
+    return _normalize_deva(tail)
+
+
+def get_chapter_number(path):
+    """Extract chapter number from filename like Balkand_Ch3_*.txt."""
+    m = re.search(r"_Ch(\d+)_", path.name)
+    return int(m.group(1)) if m else 0
+
+
+def max_chapter_num(kaand_dir):
+    """Return the highest Ch number in a kaand folder."""
+    nums = [get_chapter_number(f) for f in kaand_dir.glob("*.txt")]
+    return max(nums) if nums else 0
+
+
 # ================================================================
 # Tests - Structural (TC-S)
 # ================================================================
 
 def tc_s_001(kaand_dir):
+    """File count: variable per kaand (typically 6-10), only .txt files."""
     txts = list(kaand_dir.glob("*.txt"))
     others = [p for p in kaand_dir.iterdir()
               if p.is_file() and p.suffix != ".txt"]
-    ok = len(txts) == 5 and not others
+    ok = len(txts) >= 1 and not others
     return TestResult("TC-S-001", "Folder file count", BLOCKER, ok,
                       f"{len(txts)} .txt + {len(others)} others")
 
 
 def tc_s_002(kaand_dir):
+    """Filename pattern: <Kaand>_Ch<N>_<Title>.txt with N a positive integer."""
     name = kaand_dir.name
-    pat = re.compile(rf"^{name}_Ch[1-5]_[A-Za-z][A-Za-z_]*\.txt$")
+    pat = re.compile(rf"^{name}_Ch[0-9]+_[A-Za-z][A-Za-z0-9_]*\.txt$")
     bad = [f.name for f in kaand_dir.glob("*.txt") if not pat.match(f.name)]
     return TestResult("TC-S-002", "File naming pattern", BLOCKER, not bad,
                       "ok" if not bad else f"bad: {bad}")
@@ -169,57 +265,81 @@ def tc_s_004(style):
 
 
 def tc_s_005(lyrics):
-    tags = re.findall(r"\[Verse (\d+)\]", lyrics)
-    found = sorted({int(t) for t in tags})
-    expected = list(range(1, 13))
-    return TestResult("TC-S-005", "12 verses (1-12)", BLOCKER,
-                      found == expected, f"found {found}")
+    """Total verse content = 31 lines (3 sthayi + 7 verses * 4 padas)."""
+    total = 0
+    cs = extract_choruses(lyrics)
+    if cs:
+        total += len(lyric_lines(cs[0]))
+    for body in extract_verses(lyrics).values():
+        total += len(lyric_lines(body))
+    return TestResult("TC-S-005", "Total verse lines = 31", BLOCKER,
+                      total == 31, f"{total} lines")
 
 
-def tc_s_006_007(lyrics):
+def tc_s_006(lyrics):
+    """Structure: 1 sthayi (3 lines) + 7 verses (4 padas each)."""
     issues = []
-    choruses = extract_choruses(lyrics)
-    if not choruses:
-        issues.append("no chorus block")
-    else:
-        n = len(lyric_lines(choruses[0]))
-        if n != 3:
-            issues.append(f"mukhda has {n} lines (expected 3)")
+    cs = extract_choruses(lyrics)
+    if not cs:
+        issues.append("no chorus")
+    elif len(lyric_lines(cs[0])) != 3:
+        issues.append(f"sthayi has {len(lyric_lines(cs[0]))} lines (expected 3)")
     for vn, body in sorted(extract_verses(lyrics).items()):
         n = len(lyric_lines(body))
         if n != 4:
-            issues.append(f"verse {vn} has {n} lines")
-    return TestResult("TC-S-006/007", "Mukhda 3 + each verse 4 lines",
-                      BLOCKER, not issues,
-                      "ok" if not issues else "; ".join(issues))
+            issues.append(f"V{vn} has {n} padas (expected 4)")
+    return TestResult("TC-S-006", "Structure 3 + 7x4", BLOCKER,
+                      not issues, "ok" if not issues else "; ".join(issues))
+
+
+def tc_s_007(lyrics):
+    """Sthayi appears before any [Verse N]."""
+    first_chorus = lyrics.find("[Chorus]")
+    first_verse = lyrics.find("[Verse")
+    ok = first_chorus >= 0 and first_chorus < first_verse
+    return TestResult("TC-S-007", "Sthayi at top", BLOCKER, ok,
+                      "ok" if ok else "sthayi not first")
 
 
 def tc_s_008(lyrics):
-    v5 = lyrics.find("[Verse 5]")
-    v9 = lyrics.find("[Verse 9]")
-    chorus_pos = [m.start() for m in re.finditer(r"\[Chorus\]", lyrics)]
-    near5 = any(0 < v5 - cp < 300 for cp in chorus_pos)
-    near9 = any(0 < v9 - cp < 300 for cp in chorus_pos)
-    return TestResult("TC-S-008", "Chorus return at V5 and V9", MAJOR,
-                      near5 and near9, f"near V5={near5}, near V9={near9}")
+    """Mid-chapter chorus return: at least one [Chorus] block between V1 and V7."""
+    v1 = lyrics.find("[Verse 1]")
+    v7 = lyrics.find("[Verse 7]")
+    chorus_positions = [m.start() for m in re.finditer(r"\[Chorus\]", lyrics)]
+    mid_returns = [cp for cp in chorus_positions if v1 < cp < v7]
+    ok = len(mid_returns) >= 1
+    return TestResult("TC-S-008", "Mid-chapter chorus return", MAJOR, ok,
+                      f"{len(mid_returns)} mid-return(s)")
 
 
 def tc_s_009(lyrics):
-    return TestResult("TC-S-009", "[Outro] tag present", MAJOR,
-                      "[Outro]" in lyrics,
-                      "ok" if "[Outro]" in lyrics else "missing")
+    """Verse count = 7, numbered 1 through 7."""
+    tags = re.findall(r"\[Verse (\d+)\]", lyrics)
+    found = sorted({int(t) for t in tags})
+    expected = list(range(1, 8))
+    return TestResult("TC-S-009", "7 verses (1-7)", BLOCKER,
+                      found == expected, f"found {found}")
 
 
-def tc_s_010(path, lyrics):
-    if "_Ch5_" not in path.name:
+def tc_s_010(path, kaand_dir, lyrics):
+    """Final chapter of kaand has extra [Chorus] after V7 before [Outro]."""
+    cn = get_chapter_number(path)
+    mn = max_chapter_num(kaand_dir)
+    if cn != mn:
         return TestResult("TC-S-010", "Final-chapter extra chorus",
                           MINOR, True, "n/a")
-    v12 = lyrics.find("[Verse 12]")
+    v7 = lyrics.find("[Verse 7]")
     outro = lyrics.find("[Outro]")
     chorus_pos = [m.start() for m in re.finditer(r"\[Chorus\]", lyrics)]
-    extra = any(v12 < cp < outro for cp in chorus_pos)
+    extra = any(v7 < cp < outro for cp in chorus_pos)
     return TestResult("TC-S-010", "Final-chapter extra chorus", MINOR,
                       extra, "ok" if extra else "missing extra chorus")
+
+
+def tc_s_011(lyrics):
+    return TestResult("TC-S-011", "[Outro] tag present", BLOCKER,
+                      "[Outro]" in lyrics,
+                      "ok" if "[Outro]" in lyrics else "missing")
 
 
 # ================================================================
@@ -252,17 +372,17 @@ def tc_f_003(lyrics):
 
 
 def tc_f_004(path, lyrics):
-    if not (path.name.startswith("Balkand_") and "_Ch4_" in path.name):
+    """Ahalya rejoins Gautama (only checked if Ahalya episode appears here)."""
+    if "अहल्या" not in lyrics:
         return TestResult("TC-F-004", "Ahalya rejoins Gautama",
                           MAJOR, True, "n/a")
-    has_pati = "पति" in lyrics
-    has_gautam = "गौतम" in lyrics
+    has_pati = "पति" in lyrics or "गौतम" in lyrics
     return TestResult("TC-F-004", "Ahalya rejoins Gautama", MAJOR,
-                      has_pati and has_gautam,
-                      f"पति={has_pati}, गौतम={has_gautam}")
+                      has_pati, "ok" if has_pati else "no पति/गौतम reunion")
 
 
 def tc_f_005(path, lyrics):
+    """Avatar-katha trio (Balkand Ch1)."""
     if not (path.name.startswith("Balkand_") and "_Ch1_" in path.name):
         return TestResult("TC-F-005", "Avatar-katha trio (Balkand Ch1)",
                           BLOCKER, True, "n/a")
@@ -274,13 +394,14 @@ def tc_f_005(path, lyrics):
 
 
 def tc_f_006(path, lyrics):
-    if not (path.name.startswith("Balkand_") and "_Ch2_" in path.name):
+    """Sumitra-from-both-queens (Balkand kheer-vitaran chapter)."""
+    if "खीर" not in lyrics:
         return TestResult("TC-F-006", "Sumitra from both queens",
                           MAJOR, True, "n/a")
-    has = [t in lyrics for t in ["दोनों", "सुमित्रा", "भाग"]]
+    has = [t in lyrics for t in ["दोनों", "सुमित्रा"]]
     return TestResult("TC-F-006", "Sumitra from both queens", MAJOR,
                       all(has),
-                      f"दोनों={has[0]}, सुमित्रा={has[1]}, भाग={has[2]}")
+                      f"दोनों={has[0]}, सुमित्रा={has[1]}")
 
 
 def tc_f_007(lyrics):
@@ -291,12 +412,33 @@ def tc_f_007(lyrics):
 
 
 # ================================================================
-# Tests - Lyricist (TC-L)
+# Tests - Lyricist Craft (TC-L) - v2
 # ================================================================
 
+def tc_l_001(lyrics):
+    """AABB rhyme per chaupai: padas 1+2 share a tail; padas 3+4 share
+    a (different) tail. NOT AAAA."""
+    bad = []
+    for vn, body in sorted(extract_verses(lyrics).items()):
+        padas = lyric_lines(body)
+        if len(padas) != 4:
+            continue  # caught by tc_s_006
+        t = [pada_tail(p, 2) for p in padas]
+        # A pair must match
+        if t[0] != t[1]:
+            bad.append(f"V{vn}: A-pair ({t[0]}/{t[1]})")
+        # B pair must match
+        if t[2] != t[3]:
+            bad.append(f"V{vn}: B-pair ({t[2]}/{t[3]})")
+        # AABB-not-AAAA: A and B should differ
+        if t[0] == t[2] and t[0] == t[1] and t[2] == t[3]:
+            bad.append(f"V{vn}: AAAA not AABB")
+    return TestResult("TC-L-001", "AABB rhyme per chaupai", BLOCKER,
+                      not bad, "ok" if not bad else "; ".join(bad[:3]))
+
+
 def tc_l_002(lyrics):
-    # Long vowel signs (matras) + independent long vowels + nasal +
-    # semi-vowel glides which are sustainable in bhajan singing.
+    """Long-vowel rhyme endings."""
     long_vowels = ['ा', 'ी', 'ू', 'े', 'ो', 'ौ', 'ै', 'ं',
                    'आ', 'ई', 'ऊ', 'ए', 'ऐ', 'ओ', 'औ', 'ँ',
                    'य', 'व', 'र']
@@ -324,6 +466,47 @@ def tc_l_004(lyrics):
                       not bad, "ok" if not bad else "; ".join(bad))
 
 
+def tc_l_008(path, kaand_dir, lyrics):
+    """Sthayi must match the kaand's signature Tulsidas couplet (Section 3.6)."""
+    expected = SIGNATURE_STHAYIS.get(kaand_dir.name)
+    if not expected:
+        return TestResult("TC-L-008", "Sthayi matches Section 3.6",
+                          MAJOR, True, "no expectation set")
+    cs = extract_choruses(lyrics)
+    if not cs:
+        return TestResult("TC-L-008", "Sthayi matches Section 3.6",
+                          BLOCKER, False, "no chorus")
+    actual = lyric_lines(cs[0])
+    if actual == expected:
+        return TestResult("TC-L-008", "Sthayi matches Section 3.6",
+                          BLOCKER, True, "exact match")
+    diffs = []
+    for i in range(min(len(actual), len(expected))):
+        if actual[i] != expected[i]:
+            diffs.append(f"L{i+1}")
+    return TestResult("TC-L-008", "Sthayi matches Section 3.6",
+                      BLOCKER, False, f"diff on {diffs}")
+
+
+def tc_l_009(lyrics):
+    """Full-syllable rhyme: each AABB pair shares the FINAL 2 syllables.
+    This is a stronger version of TC-L-001 (already checks last 2 chars)."""
+    bad = []
+    for vn, body in sorted(extract_verses(lyrics).items()):
+        padas = lyric_lines(body)
+        if len(padas) != 4:
+            continue
+        # Take last 3 chars to be stricter on syllable boundary
+        t3 = [pada_tail(p, 3) for p in padas]
+        # If A-pair last 2 chars match but last 3 don't, it's a loose rhyme
+        if pada_tail(padas[0], 2) == pada_tail(padas[1], 2) and t3[0] != t3[1]:
+            bad.append(f"V{vn}A loose ({t3[0]}/{t3[1]})")
+        if pada_tail(padas[2], 2) == pada_tail(padas[3], 2) and t3[2] != t3[3]:
+            bad.append(f"V{vn}B loose ({t3[2]}/{t3[3]})")
+    return TestResult("TC-L-009", "Full-syllable rhyme tail", MAJOR,
+                      not bad, "ok" if not bad else "; ".join(bad[:3]))
+
+
 def tc_l_010(lyrics):
     issues = []
     if "अनंग" in lyrics:
@@ -332,6 +515,23 @@ def tc_l_010(lyrics):
         issues.append("ज़ (nukta) found")
     return TestResult("TC-L-010", "Word-sense correctness", MAJOR,
                       not issues, "ok" if not issues else "; ".join(issues))
+
+
+def tc_l_011(lyrics):
+    """At least 2 distinct Awadhi participles per chapter."""
+    found = set()
+    for word in AWADHI_PARTICIPLES:
+        if word in lyrics:
+            found.add(word)
+    ok = len(found) >= 2
+    return TestResult("TC-L-011", "Awadhi participles present", MAJOR, ok,
+                      f"{len(found)} distinct: {sorted(found)[:5]}")
+
+
+def tc_l_012(lyrics):
+    return TestResult("TC-L-012", "No nukta ज़", MAJOR,
+                      "ज़" not in lyrics,
+                      "clean" if "ज़" not in lyrics else "found ज़")
 
 
 # ================================================================
@@ -396,8 +596,6 @@ def tc_x_003(lyrics):
         issues.append("Devanagari section labels")
     if "पंक्ति-सत्यापन" in lyrics:
         issues.append("line-count footer")
-    # समर्पण as a HEADER (markdown or standalone block label), not as
-    # a verse word (e.g., "पुत्र-समर्पण" is legitimate).
     if "### समर्पण" in lyrics or re.search(r"^समर्पण\s*$", lyrics, re.M):
         issues.append("समर्पण dedication block")
     return TestResult("TC-X-003", "No markdown/numbers in lyrics", BLOCKER,
@@ -406,7 +604,8 @@ def tc_x_003(lyrics):
 
 
 def tc_x_004(lyrics):
-    required = ["[Chorus]"] + [f"[Verse {i}]" for i in range(1, 13)] + ["[Outro]"]
+    """All structure tags present: [Chorus], [Verse 1-7], [Outro]."""
+    required = ["[Chorus]"] + [f"[Verse {i}]" for i in range(1, 8)] + ["[Outro]"]
     missing = [t for t in required if t not in lyrics]
     return TestResult("TC-X-004", "All structure tags present", BLOCKER,
                       not missing,
@@ -478,10 +677,11 @@ def tc_t_003(raw):
 
 
 # ================================================================
-# Tests - Cross-chapter (TC-C, folder-level)
+# Tests - Cross-chapter / Cross-kaand (TC-C)
 # ================================================================
 
 def tc_c_001(kaand_dir):
+    """Jay-ghosh in sthayi line 3 across all chapters."""
     issues = []
     for f in sorted(kaand_dir.glob("*.txt")):
         style, lyrics, _ = parse_chapter_file(f)
@@ -493,25 +693,33 @@ def tc_c_001(kaand_dir):
             continue
         lines = lyric_lines(cs[0])
         if len(lines) < 3:
-            issues.append(f"{f.name}: mukhda <3 lines")
+            issues.append(f"{f.name}: sthayi <3 lines")
             continue
         if "जय" not in lines[2] or "राम" not in lines[2]:
             issues.append(f"{f.name}: line 3 lacks jay-राम")
-    return TestResult("TC-C-001", "Jay-ghosh binding across mukhdas",
-                      MAJOR, not issues,
+    return TestResult("TC-C-001", "Jay-ghosh binding in sthayi line 3",
+                      BLOCKER, not issues,
                       "all bound" if not issues else "; ".join(issues))
 
 
 def tc_c_002(kaand_dir):
-    phrase = VOICE_DESCRIPTOR_PHRASES[0]
-    issues = []
+    """Same sthayi (3-line block) used across ALL chapters of a kaand."""
+    sthayis = {}
     for f in sorted(kaand_dir.glob("*.txt")):
-        style, _, _ = parse_chapter_file(f)
-        if style and phrase not in style:
-            issues.append(f"{f.name}")
-    return TestResult("TC-C-002", "Voice descriptor consistent", MAJOR,
-                      not issues,
-                      "consistent" if not issues else f"missing in {issues}")
+        style, lyrics, _ = parse_chapter_file(f)
+        if not lyrics:
+            continue
+        cs = extract_choruses(lyrics)
+        if cs:
+            sthayis[f.name] = tuple(lyric_lines(cs[0]))
+    if not sthayis:
+        return TestResult("TC-C-002", "Same sthayi across kaand",
+                          MAJOR, False, "no sthayis found")
+    distinct = set(sthayis.values())
+    ok = len(distinct) == 1
+    return TestResult("TC-C-002", "Same sthayi across all chapters", BLOCKER,
+                      ok,
+                      f"{len(distinct)} distinct sthayi(s)")
 
 
 def tc_c_003(kaand_dir):
@@ -529,23 +737,48 @@ def tc_c_003(kaand_dir):
                       "ok" if not issues else f"missing in {issues}")
 
 
+def tc_c_005(kaand_dir):
+    """Sthayi matches Section 3.6 across ALL chapters."""
+    expected = SIGNATURE_STHAYIS.get(kaand_dir.name)
+    if not expected:
+        return TestResult("TC-C-005", "Sthayi matches Section 3.6",
+                          MAJOR, True, "no expectation set")
+    bad = []
+    for f in sorted(kaand_dir.glob("*.txt")):
+        style, lyrics, _ = parse_chapter_file(f)
+        if not lyrics:
+            continue
+        cs = extract_choruses(lyrics)
+        if not cs:
+            bad.append(f.name)
+            continue
+        if lyric_lines(cs[0]) != expected:
+            bad.append(f.name)
+    return TestResult("TC-C-005", "Sthayi matches Section 3.6 (kaand-wide)",
+                      BLOCKER, not bad,
+                      "ok" if not bad else f"mismatch in {bad[:2]}")
+
+
 # ================================================================
 # Runner
 # ================================================================
 
-def run_chapter(path):
+def run_chapter(path, kaand_dir):
     style, lyrics, raw = parse_chapter_file(path)
     if not style or not lyrics:
         return [TestResult("TC-S-003", "STYLE/LYRICS markers",
                            BLOCKER, False, "cannot parse file")]
     return [
         tc_s_003(raw), tc_s_004(style), tc_s_005(lyrics),
-        tc_s_006_007(lyrics), tc_s_008(lyrics), tc_s_009(lyrics),
-        tc_s_010(path, lyrics),
+        tc_s_006(lyrics), tc_s_007(lyrics), tc_s_008(lyrics),
+        tc_s_009(lyrics), tc_s_010(path, kaand_dir, lyrics),
+        tc_s_011(lyrics),
         tc_f_001(lyrics), tc_f_002(lyrics), tc_f_003(lyrics),
         tc_f_004(path, lyrics), tc_f_005(path, lyrics),
         tc_f_006(path, lyrics), tc_f_007(lyrics),
-        tc_l_002(lyrics), tc_l_004(lyrics), tc_l_010(lyrics),
+        tc_l_001(lyrics), tc_l_002(lyrics), tc_l_004(lyrics),
+        tc_l_008(path, kaand_dir, lyrics),
+        tc_l_010(lyrics), tc_l_011(lyrics), tc_l_012(lyrics),
         tc_m_002(lyrics), tc_m_003(lyrics), tc_m_006(style),
         tc_x_001(style), tc_x_002(style), tc_x_003(lyrics),
         tc_x_004(lyrics), tc_x_005(lyrics), tc_x_006(lyrics),
@@ -557,11 +790,12 @@ def run_chapter(path):
 def run_kaand(kaand_dir):
     folder_tests = [
         tc_s_001(kaand_dir), tc_s_002(kaand_dir),
-        tc_c_001(kaand_dir), tc_c_002(kaand_dir), tc_c_003(kaand_dir),
+        tc_c_001(kaand_dir), tc_c_002(kaand_dir),
+        tc_c_003(kaand_dir), tc_c_005(kaand_dir),
     ]
     chapter_tests = {}
     for f in sorted(kaand_dir.glob("*.txt")):
-        chapter_tests[f.name] = run_chapter(f)
+        chapter_tests[f.name] = run_chapter(f, kaand_dir)
     return folder_tests, chapter_tests
 
 

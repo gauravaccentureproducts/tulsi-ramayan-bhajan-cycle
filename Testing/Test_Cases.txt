@@ -1,857 +1,217 @@
 ================================================================================
-TULSI-RAMAYAN BHAJAN CYCLE - TEST CASES
+TULSI-RAMAYAN BHAJAN CYCLE - TEST CASES (v2 - Tulsidas-Mukesh format)
 ================================================================================
-Verification suite for every check we run on each kaand before declaring it
-done. Use this file as the human-readable authority. Run verify.py in this
-same folder for the automatable subset.
-
-Severity legend:
-   BLOCKER - must pass; failure means kaand is NOT READY
-   MAJOR   - should pass; failure means quality is below the 1950s-studio bar
-   MINOR   - nice-to-have; failure means small polish gap
-
-Each test case has:
-   ID       - stable identifier
-   Scope    - per-chapter / per-kaand / per-cycle
-   Severity - BLOCKER / MAJOR / MINOR
-   Pass     - what success looks like
-   Verify   - how to verify (manual or automated)
-   Auto     - YES if verify.py covers this; otherwise manual
-   Ref      - section in Procedure_Manual.txt
-
-Usage workflow:
-   1. After completing a kaand, run verify.py for automated checks.
-   2. Walk through this file for the manual checks.
-   3. Fix BLOCKERS first, then MAJORS, then MINORS.
-
-Reference: Tulsi\Procedure_Manual.txt is the source-of-truth manual.
+Comprehensive quality-check suite for the v2 31-line AABB chaupai format.
+Severity tags: [BLOCKER] = must fix before commit
+                [MAJOR  ] = should fix
+                [MINOR  ] = nice to fix
 ================================================================================
-
-
-================================================================================
-INDEX
-================================================================================
-   TC-S  | Structural                       (10 tests)
-   TC-F  | Fact Validation vs Tulsidas      (8 common + 7 per-kaand episode lists)
-   TC-L  | Lyricist Craft                   (11 tests)
-   TC-M  | Music Director / Singability     (6 tests)
-   TC-X  | Suno Format                      (11 tests)
-   TC-T  | Linguistic / Encoding            (5 tests)
-   TC-C  | Cross-Chapter / Cross-Kaand      (4 tests)
-   APPENDIX A | Regression Quick-Run        (minimum subset for re-checks)
-
-
-================================================================================
-SECTION TC-S - STRUCTURAL
-================================================================================
-
-TC-S-001 | Folder file count
-   Scope    : per-kaand
-   Severity : BLOCKER
-   Pass     : Tulsi\<KaandName>\ contains exactly 5 .txt files. No .md,
-              no other files (no zip, no leftover prompts file, etc.).
-   Verify   : ls / dir of folder; count entries.
-   Auto     : YES (verify.py)
-   Ref      : Procedure_Manual §1.4
-
-TC-S-002 | File naming pattern
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : Filename matches <KaandName>_Ch<N>_<EpisodeTitleInEnglish>.txt
-              N is 1..5; Title uses underscores not spaces.
-   Verify   : regex check.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 7
-
-TC-S-003 | STYLE/LYRICS section markers present
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : Each chapter file contains exactly one
-              '========== STYLE (paste into Suno style box) =========='
-              marker AND exactly one
-              '========== LYRICS (paste into Suno lyrics box) =========='
-              marker, in that order.
-   Verify   : substring count check.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 7
-
-TC-S-004 | Style prompt under char limit
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : The STYLE block body (between STYLE marker and LYRICS marker)
-              is <= 1000 characters including spaces.
-   Verify   : char count.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 6
-
-TC-S-005 | Verse count per chapter
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : Each chapter has exactly 12 [Verse N] tags, with N from 1 to 12.
-   Verify   : grep count of [Verse N] tags.
-   Auto     : YES
-   Ref      : Procedure_Manual §1.3
-
-TC-S-006 | Chaupai line count
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : Each [Verse N] block has exactly 4 Devanagari lines.
-              Total verse lines per chapter = 48 (12 x 4).
-              Plus 3 lines of mukhda = 51 lines.
-   Verify   : line count between [Verse N] and next tag.
-   Auto     : YES
-   Ref      : Procedure_Manual §1.3
-
-TC-S-007 | Mukhda 3 lines
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : The first [Chorus] block has exactly 3 Devanagari lines.
-   Verify   : count lines after opening [Chorus] until blank/next tag.
-   Auto     : YES
-   Ref      : Procedure_Manual §1.3
-
-TC-S-008 | Chorus returns at V5 and V9
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : [Chorus] tag (re-paste, not just bare tag) appears
-              immediately before [Verse 5] AND immediately before [Verse 9].
-   Verify   : check position of [Chorus] occurrences.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 5 step 3
-
-TC-S-009 | [Outro] tag present
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : [Outro] tag appears at end of file (last non-empty line block).
-   Verify   : check last tag in file.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 5 step 2
-
-TC-S-010 | Final-chapter extra chorus before Outro
-   Scope    : per-kaand (chapter 5 only)
-   Severity : MINOR
-   Pass     : Chapter 5 of each kaand has an extra [Chorus] block between
-              [Verse 12] and [Outro] for grand-finale effect.
-   Verify   : check Ch 5 file structure.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 5 step 3
-
-
-================================================================================
-SECTION TC-F - FACT VALIDATION VS TULSIDAS
-================================================================================
-
-------------------------------------------------------------
-TC-F COMMON RULES (apply to ALL kaands)
-------------------------------------------------------------
-
-TC-F-001 | No yuga error
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : The lyrics must NOT contain the word "कलियुग" in any context
-              that refers to the Ram-avatar (i.e., as the time when Ravana
-              was tyrannizing or when Ram was born). The avatar is in
-              Treta Yug.
-   Verify   : grep -F "कलियुग" in all chapter lyrics; manual check of context
-              if matches found.
-   Auto     : YES (keyword presence)
-   Ref      : Procedure_Manual §4 anti-pattern #1
-
-TC-F-002 | No cross-avatar conflation (Krishna butter-stealing)
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : The lyrics must NOT attribute Krishna's signature butter-
-              stealing leela to Ram. Banned phrase combinations:
-                 मक्खन + लूट / चुरा / चोरी
-                 माखन + लूट / चुरा / चोरी
-              Ram's bal-leela should use dust-coated brothers, toy
-              bow-arrows, anklet-bells, mother's lap imagery.
-   Verify   : grep combinations.
-   Auto     : YES
-   Ref      : Procedure_Manual §4 anti-pattern #2
-
-TC-F-003 | No Valmiki-style stri-vadh dilemma at Tadaka
-   Scope    : Balkand Ch 3 + any future kaand with Tadaka
-   Severity : MAJOR
-   Pass     : The Tadaka-vadh chaupai should use muni-aagya framing
-              ("मुनि-आज्ञा सुनी प्रभु ने" or similar), NOT Valmiki's
-              "स्त्री-वध कैसे करें" hesitation framing.
-   Verify   : grep "स्त्री-वध" in lyrics body; if present, fail.
-   Auto     : YES
-   Ref      : Procedure_Manual §4 anti-pattern #16
-
-TC-F-004 | Ahalya rejoins Gautama
-   Scope    : Balkand Ch 4
-   Severity : MAJOR
-   Pass     : After Ahalya-uddhar, the lyrics must show Ahalya rejoining
-              her husband Gautama (e.g., "पति-संग पुनि चली" or "गौतम-स्वामी
-              से जा मिलूँगी"), NOT staying alone in solo tap.
-   Verify   : grep "पति" near "अहल्या" or "गौतम" in Ch 4.
-   Auto     : YES (keyword presence)
-   Ref      : Procedure_Manual §4 anti-pattern #15
-
-TC-F-005 | Avatar-katha trio in opening kaand
-   Scope    : Balkand Ch 1 (and any kaand opening the cycle with
-              avatar-katha)
-   Severity : BLOCKER
-   Pass     : Lyrics of Ch 1 must contain references to ALL THREE
-              Tulsidas-specific avatar-katha episodes:
-                 नारद  (Narad-moh)
-                 मनु + शतरूपा (Manu-Shatarupa)
-                 प्रतापभानु (Pratapbhanu)
-   Verify   : grep each name in Ch 1 lyrics.
-   Auto     : YES
-   Ref      : Procedure_Manual §4 anti-pattern #6
-
-TC-F-006 | Sumitra-from-both-queens detail
-   Scope    : Balkand Ch 2
-   Severity : MAJOR
-   Pass     : The kheer-vitaran chaupai must explicitly show that Sumitra
-              received portions from BOTH Kaushalya AND Kaikeyi. Look for
-              "दोनों" + "सुमित्रा" + "भाग" or equivalent.
-   Verify   : grep combinations.
-   Auto     : YES
-   Ref      : Procedure_Manual §4 anti-pattern #5
-
-TC-F-007 | No forced rhyme padding (banned word list)
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : The following coined / forced-rhyme tokens must NOT appear
-              in lyrics:
-                 ललाम (filler)
-                 हुई हृदय की पाँव (gibberish)
-                 शाप-दुख-धारि (coined "धारि")
-                 दुष्ट-कमान (Tadaka had no bow)
-                 विवाह-गान (coined compound)
-                 अनंग used to mean "humble" (अनंग = Kamadeva)
-                 कौसल्या सुलक्षणा (reads as proper noun)
-   Verify   : grep each token.
-   Auto     : YES
-   Ref      : Procedure_Manual §4 anti-patterns 3, 8, 9, 10, 11
-
-TC-F-008 | All canonical episodes for the kaand present
-   Scope    : per-kaand
-   Severity : BLOCKER
-   Pass     : Every signature episode from this kaand's per-kaand checklist
-              (see TC-F-K1 through TC-F-K7 below) is represented by at
-              least one chaupai. No invented episodes; no skipped events.
-   Verify   : walk-through manually; cross-ref episode keywords vs lyrics.
-   Auto     : PARTIAL (keyword spot-check)
-   Ref      : Procedure_Manual §3.1
 
 
 ------------------------------------------------------------
-TC-F-K1 | BAL KAND - Episode coverage checklist
+GROUP TC-S : STRUCTURAL TESTS
 ------------------------------------------------------------
-Severity per item: MAJOR unless noted. Mark each [ ] when verified present.
 
-   [ ] Mangalacharan (Ganesh, Saraswati, Shiva, Hanuman, Guru, Tulsidas)
-   [ ] Narad-moh                                          (BLOCKER)
-   [ ] Manu-Shatarupa tapasya                             (BLOCKER)
-   [ ] Pratapbhanu rebirth as Ravana/Kumbhakaran/Vibhishan (BLOCKER)
-   [ ] Ravana's tyranny in TRETA (not Kaliyug)            (BLOCKER)
-   [ ] Brahma boon to Ravana
-   [ ] Prithvi as cow, plea to Brahma
-   [ ] Vishnu pledge at Kshirsagar; four forms in Dasharath's house
-   [ ] Dasharath's three queens, childlessness
-   [ ] Vashishtha advises Putrakameshti
-   [ ] Shringi rishi invited
-   [ ] Yajna; yajna-purusha appears with kheer
-   [ ] Kheer distribution: 1/2 Kaushalya, 1/4 Kaikeyi, Sumitra
-       receives from BOTH                                  (BLOCKER for both-queens detail)
-   [ ] Birth of four princes on Chaitra Shukla Navami
-   [ ] Ram appears in 4-armed Vishnu form then baby form
-   [ ] Naming by Vashishtha: Ram, Bharat, Lakshman, Shatrughna
-   [ ] Bal-leela (dust-coated brothers, NOT butter-stealing) (BLOCKER for not-Krishna)
-   [ ] Gurukul-shiksha with Vashishtha
-   [ ] Vishwamitra's arrival; Dasharath's distress
-   [ ] Vashishtha consoles Dasharath
-   [ ] Vana-yatra; Bala-Atibala mantras
-   [ ] Tadaka-vadh with muni-aagya frame                  (BLOCKER for frame)
-   [ ] Divyastra-pradan
-   [ ] Siddhashram; Maricha thrown far; Subahu killed
-   [ ] Ahalya-uddhar; rejoins Gautama                     (BLOCKER for rejoin)
-   [ ] Mithila arrival; Janak's welcome
-   [ ] Pushp-vatika; Sita first appears
-   [ ] First-darshan (Ram and Sita see each other)
-   [ ] Sita's Gauri-prarthana
-   [ ] Dhanush-yajna; kings fail; Janak's lament
-   [ ] Lakshman's anger
-   [ ] Ram lifts and breaks Pinaka
-   [ ] Sita's varmala
-   [ ] Parashuram's fury arrival
-   [ ] Parashuram-Lakshman samvad (at least one chaupai)
-   [ ] Ram lifts Vishnu's bow; Parashuram recognizes him
-   [ ] Chaturvivah (Ram-Sita, Lakshman-Urmila, Bharat-Mandavi,
-       Shatrughna-Shrutakirti)
-   [ ] Baraat returns to Ayodhya
+TC-S-001 [BLOCKER] Folder file count
+  Scope     : per kaand
+  Criterion : Folder contains only .txt files matching the naming pattern;
+              count is appropriate for kaand (typically 6-10).
 
+TC-S-002 [BLOCKER] File naming convention
+  Scope     : per file
+  Criterion : ^<KaandName>_Ch<N>_<EpisodeTitle>\.txt$ where N is 1+.
 
-------------------------------------------------------------
-TC-F-K2 | AYODHYA KAND - Episode coverage checklist
-------------------------------------------------------------
-   [ ] Rajya-tilak preparation by Dasharath
-   [ ] Manthara poisons Kaikeyi; reminds of two boons      (BLOCKER)
-   [ ] Kaikeyi demands: Bharat enthroned, Ram vanvas 14yr  (BLOCKER)
-   [ ] Dasharath's anguish; cannot break his word
-   [ ] Ram accepts vanvas calmly
-   [ ] Sita and Lakshman insist on accompanying
-   [ ] Departure; people of Ayodhya weep
-   [ ] Guha-milap at Shringverpur                          (BLOCKER)
-   [ ] Ganga-paar
-   [ ] Bharadwaj-ashram visit
-   [ ] Reaching Chitrakoot; ashram-life
-   [ ] Dasharath's death from grief
-   [ ] Bharat returns from Kekaya; refuses throne
-   [ ] Bharat-milap at Chitrakoot                          (BLOCKER)
-   [ ] Ram refuses to return; gives padukas                (BLOCKER)
-   [ ] Bharat places padukas on throne; ascetic at Nandigram
+TC-S-003 [BLOCKER] STYLE/LYRICS markers
+  Scope     : per file
+  Criterion : Exactly one STYLE marker and one LYRICS marker in order.
+
+TC-S-004 [BLOCKER] Style prompt length
+  Scope     : per file
+  Criterion : Style block <= 1000 characters (Suno 5.5 limit).
+
+TC-S-005 [BLOCKER] Total verse lines = 31 (v2)
+  Scope     : per file
+  Criterion : Lyrics body contains exactly 31 Devanagari content-lines.
+
+TC-S-006 [BLOCKER] Verse structure 3 + 7x4
+  Scope     : per file
+  Criterion : 1 sthayi (3 lines) + 7 [Verse N] blocks (4 lines each) = 31.
+
+TC-S-007 [BLOCKER] Sthayi at top
+  Scope     : per file
+  Criterion : First [Chorus] block appears before any [Verse N] tag.
+
+TC-S-008 [MAJOR  ] Mid-chapter chorus return
+  Scope     : per file
+  Criterion : [Chorus] returns at least once mid-song (before V4 or V5).
+
+TC-S-009 [BLOCKER] Verse count = 7
+  Scope     : per file
+  Criterion : Exactly 7 [Verse N] blocks numbered 1-7.
+
+TC-S-010 [MINOR  ] Final-chapter extra chorus
+  Scope     : per file (last chapter of each kaand)
+  Criterion : Additional [Chorus] block after [Verse 7] before [Outro].
+
+TC-S-011 [BLOCKER] [Outro] tag present
+  Scope     : per file
+  Criterion : Lyrics block ends with [Outro] tag.
 
 
 ------------------------------------------------------------
-TC-F-K3 | ARANYA KAND - Episode coverage checklist
+GROUP TC-F : FACT VALIDATION TESTS
 ------------------------------------------------------------
-   [ ] Atri-Anasuya ashram; Anasuya gives Sita ornaments + upadesh
-   [ ] Sharabhanga muni enters fire
-   [ ] Sutikshna muni
-   [ ] Agastya muni gives divine weapons
-   [ ] Panchavati; parnashala built
-   [ ] Surpanakha episode; Lakshman cuts nose/ears         (BLOCKER)
-   [ ] Khar-Dushan-Trishira slain (14,000 rakshasas)       (BLOCKER)
-   [ ] Surpanakha incites Ravana
-   [ ] Maricha as golden deer                              (BLOCKER)
-   [ ] Sita-haran by Ravana                                (BLOCKER)
-   [ ] Jatayu fights, falls
-   [ ] Ram-Lakshman return; grief
-   [ ] Jatayu's death; last rites
-   [ ] Kabandha encounter
-   [ ] Shabari's ashram; tasted berries                    (BLOCKER)
-   [ ] Directions to Rishyamuka/Sugriva
 
+TC-F-001 [BLOCKER] No yuga error (कलियुग)
+  Criterion : Word "कलियुग" does NOT appear in the lyrics.
 
-------------------------------------------------------------
-TC-F-K4 | KISHKINDHA KAND - Episode coverage checklist
-------------------------------------------------------------
-   [ ] Hanuman-milan in brahmin guise                      (BLOCKER)
-   [ ] Hanuman recognizes the divine
-   [ ] Sugriva-mitrata (agni-sakshi)                       (BLOCKER)
-   [ ] Vali-vadh                                           (BLOCKER)
-   [ ] Tara's lament; Vali's wisdom
-   [ ] Sugriva enthroned; forgets Ram in monsoon
-   [ ] Lakshman's anger; Sugriva remembers duty
-   [ ] Vanara-senas in four directions
-   [ ] Southern party reaches sea
-   [ ] Sampati confirms Sita in Lanka
-   [ ] Hanuman alone can leap
+TC-F-002 [BLOCKER] No cross-avatar conflation (Krishna butter)
+  Criterion : Krishna's butter-stealing phrases absent in Ram-context.
+
+TC-F-003 [MAJOR  ] No सुलक्षणा as proper noun
+  Criterion : "सुलक्षणा" must not appear as a queen's name.
+
+TC-F-004 [MAJOR  ] No स्त्री-वध dilemma at Tadaka
+  Criterion : Use muni-aagya frame, not stri-vadh moral dilemma.
+
+TC-F-005 [MAJOR  ] Ahalya post-redemption
+  Criterion : If Ahalya appears, she rejoins Gautama.
+
+TC-F-006 [MAJOR  ] Sumitra from both queens
+  Criterion : Both queens give kheer-portions to Sumitra.
+
+TC-F-007 [MAJOR  ] No filler/coined words
+  Criterion : Banned filler list absent.
+
+TC-F-K1 through TC-F-K7 [MAJOR] Per-kaand episode coverage
+  Criterion : All canonical Tulsidas episodes for the kaand appear at
+              least once across the kaand's chapters.
 
 
 ------------------------------------------------------------
-TC-F-K5 | SUNDAR KAND - Episode coverage checklist
+GROUP TC-L : LYRICIST CRAFT TESTS (v2 updated)
 ------------------------------------------------------------
-   [ ] Ocean leap                                          (BLOCKER)
-   [ ] Surasa
-   [ ] Simhika
-   [ ] Entry into Lanka
-   [ ] Vibhishan's house
-   [ ] Ashok-vatika; Sita captive                          (BLOCKER)
-   [ ] Ravana threatens Sita; she refuses
-   [ ] Trijata's dream
-   [ ] Hanuman-Sita meet; mudrika; chudamani               (BLOCKER)
-   [ ] Ashok-vatika destruction
-   [ ] Caught; tail set afire
-   [ ] Lanka-dahan                                         (BLOCKER)
-   [ ] Returns to Sita; blessing
-   [ ] Crosses back; informs Ram
-   [ ] Vibhishan-sharanagati (END of Sundar Kand, not Lanka)
-   [ ] Setu-bandh prarambh
+
+TC-L-001 [BLOCKER] AABB rhyme per chaupai (NEW v2)
+  Criterion : Each 4-pada chaupai has 2 distinct rhyme-pairs:
+              padas 1-2 share a tail, padas 3-4 share a different tail.
+              NOT AAAA.
+
+TC-L-002 [MAJOR  ] Long-vowel rhyme endings
+  Criterion : Each pada ends on a long vowel or nasal-vowel.
+
+TC-L-003 [MAJOR  ] Pada matra count ~14-16 (v2 updated)
+  Criterion : Each pada approximately 14-16 matras (Tulsidas meter).
+
+TC-L-004 [MINOR  ] Stock-word frequency cap (v2 recalculated)
+  Criterion : Per-chapter caps:
+                महान    <= 4
+                अभिराम  <= 3
+                जय-जयकार <= 3
+                धाम     <= 5
+                नाम     <= 5
+                गान     <= 5
+
+TC-L-005 [MAJOR  ] No banned filler words
+  Criterion : Listed banned filler/coined words absent.
+
+TC-L-006 [MINOR  ] Concrete imagery preferred
+  Criterion : Subjective abstract-cliche avoidance.
+
+TC-L-007 [MINOR  ] Register consistency within chaupai
+  Criterion : No mixing of folk-Hindi and heavy Sanskrit-tatsama.
+
+TC-L-008 [BLOCKER] Sthayi is kaand's signature Tulsidas couplet (NEW v2)
+  Criterion : Sthayi lines 1-2 match the kaand's signature couplet from
+              Procedure_Manual.txt Section 3.6 verbatim.
+
+TC-L-009 [MAJOR  ] AABB pair full-syllable tail match (NEW v2)
+  Criterion : Padas in each rhyme-pair share their FINAL 2 syllables
+              (not just final consonant).
+
+TC-L-010 [MAJOR  ] Word-sense correctness
+  Criterion : Words used with correct semantic sense.
+
+TC-L-011 [MAJOR  ] Awadhi participles present (NEW v2)
+  Criterion : At least 2 distinct Awadhi-style participles per chapter:
+              कीन्हा, दीन्हा, लीन्हा, आयो, गयो, जायो, छायो, समायो, भयो,
+              भा, पाई, सुहाई, बढ़ाई, रचाई, समाना, स्थाना, वीरा, पीरा,
+              धीरा.
+
+TC-L-012 [MAJOR  ] No nukta ज़
+  Criterion : Character ज़ does NOT appear in lyrics.
 
 
 ------------------------------------------------------------
-TC-F-K6 | LANKA KAND - Episode coverage checklist
+GROUP TC-M : MUSIC DIRECTOR / SINGABILITY TESTS
 ------------------------------------------------------------
-   [ ] Setu-bandh completion
-   [ ] Cross with army
-   [ ] Angad-dautya                                        (BLOCKER)
-   [ ] Ravana spurns peace
-   [ ] War begins; multi-day battles
-   [ ] Kumbhakaran-vadh                                    (BLOCKER)
-   [ ] Meghnad's shakti strikes Lakshman
-   [ ] Sushen-vaidya; Hanuman fetches Sanjivani            (BLOCKER)
-   [ ] Lakshman revived
-   [ ] Meghnad-vadh by Lakshman                            (BLOCKER)
-   [ ] Final Ram-Ravana battle
-   [ ] Ravana-vadh                                         (BLOCKER)
-   [ ] Vibhishan crowned king of Lanka
-   [ ] Sita-agni-pariksha
-   [ ] Sita-Ram reunion
-   [ ] Pushpak-viman return to Ayodhya
-   [ ] Bharat-milap
+
+TC-M-001 [MAJOR  ] No heavy Sanskrit conjunct stacks at line-end
+TC-M-002 [MAJOR  ] No astra-stacking compounds
+TC-M-003 [MAJOR  ] No ज़ (nukta)
+TC-M-004 [MAJOR  ] Open-vowel pada endings
+TC-M-005 [MAJOR  ] Meter consistency within chaupai
+TC-M-006 [MAJOR  ] Tempo and raag stated in style prompt
 
 
 ------------------------------------------------------------
-TC-F-K7 | UTTAR KAND - Episode coverage checklist
+GROUP TC-X : SUNO FORMAT TESTS
 ------------------------------------------------------------
-   [ ] Ayodhya-return reunion                              (BLOCKER)
-   [ ] Ram-rajya-abhishek                                  (BLOCKER)
-   [ ] Ram-rajya described
-   [ ] Kakbhushundi-Garuda samvad                          (BLOCKER)
-   [ ] Bhakti-mahatmya
-   [ ] Phal-shruti
+
+TC-X-001 [BLOCKER] No artist names in style
+TC-X-002 [BLOCKER] Voice descriptor present
+TC-X-003 [BLOCKER] No markdown/numbers in lyrics
+TC-X-004 [BLOCKER] All structure tags present (Chorus, Verse 1-7, Outro)
+TC-X-005 [MAJOR  ] Tags in English only
+TC-X-006 [MAJOR  ] Chorus repeats verbatim across blocks
+TC-X-007 [MINOR  ] Intensity tags placed
+TC-X-008 [MAJOR  ] Em-dashes only in dialogue
+TC-X-009 [MINOR  ] No smart quotes
+TC-X-010 [BLOCKER] File extension .txt
+TC-X-011 [MAJOR  ] No emojis
+
+
+------------------------------------------------------------
+GROUP TC-T : LINGUISTIC TESTS
+------------------------------------------------------------
+
+TC-T-001 [BLOCKER] Devanagari script in verse body
+TC-T-002 [MAJOR  ] No smart quotes
+TC-T-003 [MINOR  ] No ellipsis char
+
+
+------------------------------------------------------------
+GROUP TC-C : CROSS-CHAPTER / CROSS-KAAND TESTS
+------------------------------------------------------------
+
+TC-C-001 [BLOCKER] Jay-ghosh in sthayi line 3 (contains "जय" and "राम")
+
+TC-C-002 [BLOCKER] Same sthayi across all chapters of kaand (NEW v2)
+  Criterion : The [Chorus] sthayi is identical across all chapters
+              within one kaand.
+
+TC-C-003 [MAJOR  ] Anchor raag matches kaand
+
+TC-C-004 [MINOR  ] Rasa modulation per chapter
+
+TC-C-005 [BLOCKER] Sthayi matches Section 3.6 verbatim (NEW v2)
+  Criterion : Sthayi lines 1-2 exactly match the assigned Tulsidas
+              couplet for this kaand.
 
 
 ================================================================================
-SECTION TC-L - LYRICIST CRAFT
+REGRESSION QUICK-RUN (minimum subset to re-execute after any edit)
 ================================================================================
-
-TC-L-001 | AAAA rhyme per chaupai
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : All 4 lines of each chaupai end on the same rhyme syllable.
-              No AABB, no ABAB, no ABCB.
-   Verify   : extract last word of each line; check vowel-pattern match.
-   Auto     : PARTIAL (last-syllable check is approximate; manual review
-              for borderline cases recommended).
-   Ref      : Procedure_Manual §2 Phase 2
-
-TC-L-002 | Long-vowel rhyme endings
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : Each chaupai's rhyme syllable ends in a long vowel
-              (-ार, -ान, -ाम, -ास, -ीर, -ंग, -ाल, -ाय, -एत, -ारी, etc.).
-              Short-vowel or consonant endings (e.g., -क, -त) are weak.
-   Verify   : last-character check per line ending.
-   Auto     : YES
-   Ref      : Procedure_Manual §3.4
-
-TC-L-003 | No filler/coined words
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : The banned-word list from TC-F-007 is also a lyric-craft
-              banned list. No coined-for-rhyme tokens.
-   Verify   : keyword grep (same as TC-F-007).
-   Auto     : YES
-   Ref      : Procedure_Manual §4
-
-TC-L-004 | Stock-word frequency cap
-   Scope    : per-chapter
-   Severity : MINOR
-   Pass     : Across one chapter (51 lines), the following stock words
-              should not appear more than the cap:
-                 महान       <= 6 times
-                 अभिराम     <= 5 times
-                 जय-जयकार   <= 4 times
-                 धाम        <= 8 times
-                 नाम        <= 8 times
-                 गान        <= 8 times
-   Verify   : word-frequency count.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 4
-
-TC-L-005 | Concrete imagery (no abstract padding)
-   Scope    : per-chapter
-   Severity : MINOR
-   Pass     : Lyrics avoid abstract noun-pairs like
-                 आशा-धूप, अनुराग छाया, मंगल-मय कल्याण (alone)
-              Prefer concrete physical images (lamp, river, ankle-bell,
-              dust-coated body, shankh, jaymal).
-   Verify   : manual review; flag any line whose meaning is hard to
-              picture.
-   Auto     : NO
-   Ref      : Procedure_Manual §2 Phase 4
-
-TC-L-006 | Register consistency
-   Scope    : per-chapter
-   Severity : MINOR
-   Pass     : Each chaupai sustains one register (devotional-tatsama OR
-              rural-folk OR simple-Hindi). Do not mix Sanskrit-heavy
-              "विद्या निरुपम भारी" with folk "हँसी की बात" within
-              one chaupai.
-   Verify   : manual review.
-   Auto     : NO
-   Ref      : Procedure_Manual §2 Phase 4
-
-TC-L-007 | Mukhda hook power
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : The 3-line mukhda is memorable: clear image OR action
-              + Lord's name + jay-ghosh refrain on line 3.
-   Verify   : manual; read aloud, ask "would a listener hum this?"
-   Auto     : NO
-   Ref      : Procedure_Manual §2 Phase 4
-
-TC-L-008 | No grammatical phantom (e.g., सुलक्षणा as name)
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : Adjectives must not be misread as proper nouns. If text
-              says "तीन रानी कौसल्या सुलक्षणा खास", a listener will
-              hear "Sulakshana" as a name. Rewrite.
-   Verify   : manual review of any line where an adjective sits between
-              two proper nouns or after a name.
-   Auto     : NO
-   Ref      : Procedure_Manual §4 anti-pattern #3
-
-TC-L-009 | One vivid adjective beats three generic ones
-   Scope    : per-chapter
-   Severity : MINOR
-   Pass     : Avoid stacked generic-adjective patterns like
-              "सुन्दर मधुर महान".
-   Verify   : grep for 3+ consecutive generic adjectives.
-   Auto     : PARTIAL
-   Ref      : Procedure_Manual §2 Phase 4
-
-TC-L-010 | Word-sense correctness
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : Vocabulary used must match its actual meaning. Specific
-              banned misuses:
-                 अनंग used for "humble" (अनंग = Kamadeva, body-less love-god)
-                 अमीर used in tatsama Hindi context (Urdu word, breaks register)
-                 ज़ोर / ज़ (nukta) in devotional verse
-   Verify   : keyword grep + context check.
-   Auto     : YES (keyword presence)
-   Ref      : Procedure_Manual §4 anti-patterns
-
-TC-L-011 | No cliche pairs
-   Scope    : per-chapter
-   Severity : MINOR
-   Pass     : Avoid lazy cliche pairs:
-                 "धर्मनिष्ठ हरि-दास"
-                 "हो रहा जय-जयकार" (used more than once per chapter)
-                 "मन में हर्ष समाए"
-   Verify   : grep frequency check.
-   Auto     : PARTIAL
-   Ref      : Procedure_Manual §4
+   TC-S-005, TC-S-006, TC-S-009 (line/structure counts)
+   TC-S-004 (style <=1000), TC-S-011 (Outro present)
+   TC-L-001 (AABB), TC-L-008 (sthayi match), TC-L-009 (full-tail rhyme),
+   TC-L-011 (Awadhi participles)
+   TC-F-001 (no kaliyug), TC-F-002 (no Krishna butter)
+   TC-X-001 (no artist names), TC-X-002 (voice descriptor)
+   TC-X-004 (all tags), TC-X-006 (chorus verbatim)
+   TC-C-001 (jay-ghosh), TC-C-002 (same sthayi), TC-C-005 (sthayi match)
 
 
 ================================================================================
-SECTION TC-M - MUSIC DIRECTOR / SINGABILITY
-================================================================================
-
-TC-M-001 | No heavy Sanskrit conjunct cluster at line-end
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : Lines must not end on heavy conjunct clusters
-              (e.g., -क्त, -ष्ट्र, -क्ष्म). Composer cannot sustain
-              the note.
-   Verify   : last-syllable conjunct check.
-   Auto     : PARTIAL
-   Ref      : Procedure_Manual §2 Phase 4
-
-TC-M-002 | No astra-stacking compounds
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : Avoid stacked astra names like
-                 "ब्रह्मास्त्र-वरुणास्त्र-अग्न्यास्त्र"
-              Either one weapon or generic "दिव्य-शस्त्र".
-   Verify   : grep for compound astra patterns.
-   Auto     : YES
-   Ref      : Procedure_Manual §4 anti-pattern #7
-
-TC-M-003 | No ज़ (nukta) anywhere
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : The character ज़ (ज + nukta) must not appear in lyrics.
-              Use देशी ज (without nukta) - more devotional register.
-   Verify   : grep for ज़.
-   Auto     : YES
-   Ref      : Procedure_Manual §4 anti-pattern #9
-
-TC-M-004 | Meter consistency within a chaupai
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : All 4 lines of a chaupai have approximately the same
-              matra count (~14-16 matras each). Composer needs a
-              regular meter to set bandish.
-   Verify   : manual matra-count or syllable count per line.
-   Auto     : PARTIAL (syllable-count proxy)
-   Ref      : Procedure_Manual §2 Phase 4
-
-TC-M-005 | Open-vowel line endings (sustainability)
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : Lines end on open long vowels (sustainable on Yaman's
-              Ga and Ni). Hard consonant stops weaken the bandish.
-   Verify   : last-character vowel check.
-   Auto     : YES
-   Ref      : Procedure_Manual §3.4
-
-TC-M-006 | Tempo and raag stated in style prompt
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : The STYLE block names a specific raag AND a specific tempo
-              (vilambit / kaharwa / dadra / medium-brisk / etc.).
-   Verify   : keyword presence in STYLE block.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 6
-
-
-================================================================================
-SECTION TC-X - SUNO FORMAT
-================================================================================
-
-TC-X-001 | No artist names in style prompt
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : The STYLE block must NOT contain any of:
-                 mukesh / Mukesh
-                 lata / Lata Mangeshkar
-                 rafi / Mohammed Rafi
-                 hmv / HMV
-                 saregama / Saregama
-                 manna dey
-                 narendra sharma / Narendra Sharma
-                 c. ramchandra / Ramchandra
-                 bharat vyas / Bharat Vyas
-                 pradeep
-                 (any other named singer, composer, lyricist, or label)
-   Verify   : keyword grep against banned list.
-   Auto     : YES
-   Ref      : Procedure_Manual §4 anti-pattern #11
-
-TC-X-002 | Mandatory voice descriptor present
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : Every STYLE block contains the standard voice descriptor
-              phrase:
-                 "warm soulful male baritone, slightly nasal resonance,
-                  plaintive heart-tugging timbre, restrained vibrato,
-                  mid-to-low range, earnest sincere delivery, smooth
-                  legato, vintage Hindi film bhajan playback style,
-                  kathavachak storyteller"
-              (Modifications allowed only for tone-shifts like
-              "deepening into longing", "sharper declamatory force",
-              "full-throated projection at climax".)
-   Verify   : substring match on key phrases.
-   Auto     : YES (substring presence)
-   Ref      : Procedure_Manual §2 Phase 6
-
-TC-X-003 | No markdown/headers/line-numbers in lyrics body
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : The LYRICS block must NOT contain:
-                 - Markdown headers (#, ##, ###)
-                 - Numeric line prefixes (1., 2., ...)
-                 - English commentary in verse body
-                 - "### चौपाई" or "### मंगल" labels
-                 - "पंक्ति-सत्यापन" footers
-                 - समर्पण dedication blocks
-   Verify   : grep for forbidden patterns.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 5 step 1
-
-TC-X-004 | All structure tags present (English brackets)
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : The LYRICS block contains, in order:
-                 - At least one [Chorus] tag (top)
-                 - [Verse 1], [Verse 2], ..., [Verse 12]
-                 - [Outro] tag
-              All tags in English, square brackets.
-   Verify   : sequential tag check.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 5 step 2
-
-TC-X-005 | Tags use English only
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : No Hindi inside [tags]. Tags like [विलम्बित आलाप] are
-              unreliable for Suno; use [Vilambit alaap] (English).
-   Verify   : grep for Devanagari chars inside [...] blocks.
-   Auto     : YES
-   Ref      : Procedure_Manual §3.5
-
-TC-X-006 | Chorus return tag-content verbatim
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : The [Chorus] re-pastes before V5 and V9 must contain the
-              SAME 3 mukhda lines as the opening [Chorus] - verbatim,
-              no variation.
-   Verify   : text-equality check on all 3 [Chorus] blocks.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 5 step 3
-
-TC-X-007 | Per-chapter intensity tag placed at arc moments
-   Scope    : per-chapter
-   Severity : MINOR
-   Pass     : At least 3 per-chapter intensity tags appear at logical
-              arc moments (e.g., [Mythic mood] before avatar-katha verse,
-              [Thunderous climax] before dhanush-bhang verse).
-              Choose from the Section 3.5 vocabulary.
-   Verify   : count + manual placement review.
-   Auto     : PARTIAL (count)
-   Ref      : Procedure_Manual §3.5
-
-TC-X-008 | Style block uses one flowing paragraph
-   Scope    : per-chapter
-   Severity : MINOR
-   Pass     : Style prompt is one or two flowing paragraphs, not bullet
-              list or section headers. Suno parses prose better than
-              structured text.
-   Verify   : check for bullet markers or section labels in STYLE block.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 6
-
-TC-X-009 | Single-quote dialogue marks stripped
-   Scope    : per-chapter
-   Severity : MINOR
-   Pass     : Lyrics body should not contain Devanagari single quotes
-              ('...'). Use em-dash before dialogue or remove the quote
-              entirely. Em-dashes are kept as voice-change cues.
-   Verify   : grep for single quotes in lyric lines.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 5 step 1
-
-TC-X-010 | File extension and encoding
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : File extension is .txt. File encoded in UTF-8 (no BOM).
-   Verify   : file ext check + chardet / first-byte check.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 7
-
-TC-X-011 | No emoji in lyrics or style
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : Neither the LYRICS block nor the STYLE block contains
-              any emoji (any character in U+1F300 to U+1FAFF range,
-              or other emoji blocks).
-   Verify   : Unicode range scan.
-   Auto     : YES
-   Ref      : (general Indian devotional aesthetic - emojis break register)
-
-
-================================================================================
-SECTION TC-T - LINGUISTIC / ENCODING
-================================================================================
-
-TC-T-001 | Devanagari verse body
-   Scope    : per-chapter
-   Severity : BLOCKER
-   Pass     : Verse lines (the 51 lines per chapter) contain ONLY
-              Devanagari characters + ASCII punctuation (commas, dandas,
-              em-dashes, periods). No English words in verse body.
-   Verify   : Unicode range check per verse line.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 2
-
-TC-T-002 | No smart quotes
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : No curly quotes (left/right double or single curly quotes).
-              Use ASCII straight quotes or none.
-   Verify   : grep U+201C, U+201D, U+2018, U+2019.
-   Auto     : YES
-   Ref      : Procedure_Manual §5 acceptance criteria
-
-TC-T-003 | No ellipsis character
-   Scope    : per-chapter
-   Severity : MINOR
-   Pass     : No U+2026 ellipsis character. Use three ASCII periods if
-              ellipsis is needed.
-   Verify   : grep U+2026.
-   Auto     : YES
-   Ref      : Procedure_Manual §5
-
-TC-T-004 | Punctuation: danda and double-danda only at line/chaupai end
-   Scope    : per-chapter
-   Severity : MINOR
-   Pass     : Verse lines end with । (danda) for non-final lines and
-              ॥ (double-danda) for the final line of each chaupai.
-              Consistent throughout.
-   Verify   : line-ending punctuation check.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 2
-
-TC-T-005 | Hindi (simple) - NOT Awadhi - NOT English
-   Scope    : per-chapter
-   Severity : MAJOR
-   Pass     : Verse body uses simple Hindi grammar. No Awadhi-specific
-              verb endings (-ahin, -hi); no English code-switching.
-              (The Awadhi pivot was reverted per project objective.)
-   Verify   : manual register-check + grep for "-ahin" / "-hi" suffixes
-              on verbs.
-   Auto     : PARTIAL
-   Ref      : Procedure_Manual §2 Phase 2
-
-
-================================================================================
-SECTION TC-C - CROSS-CHAPTER / CROSS-KAAND
-================================================================================
-
-TC-C-001 | Jay-ghosh binding across mukhdas
-   Scope    : per-kaand
-   Severity : MAJOR
-   Pass     : Line 3 of every chapter mukhda contains the phrase
-              "श्री राम जय राम जय" (with chapter-appropriate second-half
-              variation). This is the binding refrain.
-   Verify   : substring match on line 3 of [Chorus] in every chapter.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 2
-
-TC-C-002 | Voice descriptor identical across chapters of same kaand
-   Scope    : per-kaand
-   Severity : MAJOR
-   Pass     : The mandatory voice-descriptor phrase (TC-X-002) is
-              substring-identical across all 5 chapter STYLE blocks of
-              one kaand. Variations limited to the modulation phrase
-              that follows.
-   Verify   : substring extract + compare across 5 files.
-   Auto     : YES
-   Ref      : Procedure_Manual §2 Phase 6
-
-TC-C-003 | Anchor raag matches kaand
-   Scope    : per-kaand
-   Severity : MAJOR
-   Pass     : The STYLE blocks name the anchor raag specified for that
-              kaand in Procedure_Manual §3.2:
-                 Bal      - Yaman
-                 Ayodhya  - Bhairav or Puriya Dhanashri
-                 Aranya   - Malkauns or Bhopali
-                 Kishkindha - Pahadi or Brindavani Sarang
-                 Sundar   - Hamir or Bhairavi
-                 Lanka    - Marwa or Adana or Shree
-                 Uttar    - Yaman or Bhupali
-   Verify   : raag-name substring match per kaand.
-   Auto     : YES
-   Ref      : Procedure_Manual §3.2
-
-TC-C-004 | Rasa arc allocation matches chapter content
-   Scope    : per-kaand
-   Severity : MINOR
-   Pass     : Each chapter's STYLE block names a rasa that fits the
-              chapter's narrative content. E.g., Balkand Ch 3 should
-              mention "vir-rasa" or "heroic", since it covers Tadaka-vadh.
-   Verify   : manual review of STYLE-rasa vs LYRICS-content alignment.
-   Auto     : NO
-   Ref      : Procedure_Manual §3.3
-
-
-================================================================================
-APPENDIX A - REGRESSION QUICK-RUN (POST-EDIT MINIMUM SUBSET)
-================================================================================
-Use this short list after any single-line edit to a chapter file, to
-catch obvious regressions without running the full suite.
-
-   [ ] TC-S-001  - Folder still has exactly 5 .txt files
-   [ ] TC-S-003  - STYLE/LYRICS markers still in place
-   [ ] TC-S-004  - Style prompt still under 1000 chars
-   [ ] TC-S-005  - Still 12 [Verse N] tags
-   [ ] TC-S-006  - Each verse still 4 lines (or mukhda still 3 lines)
-   [ ] TC-X-001  - No artist names re-introduced
-   [ ] TC-X-002  - Voice descriptor still present verbatim
-   [ ] TC-X-003  - No markdown/line-numbers leaked back
-   [ ] TC-X-004  - All structure tags intact
-   [ ] TC-F-001  - No कलियुग re-introduced for Ram-katha
-   [ ] TC-F-002  - No Krishna butter-stealing re-introduced
-   [ ] TC-F-007  - No banned filler words re-introduced
-
-Running verify.py covers all of these automatically. The CLI command:
-   python verify.py --kaand <KaandName>
-or simply
-   python verify.py
-(runs all kaand folders found under Tulsi\).
-
-
-================================================================================
-END OF TEST CASES
+END OF TEST CASES (v2)
 ================================================================================
